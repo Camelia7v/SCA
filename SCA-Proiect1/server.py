@@ -1,26 +1,23 @@
 import socket
 import time
+from _dummy_thread import start_new_thread
 from Cryptodome.PublicKey import RSA
 import generator
+import threading
 
 public_key = b"aceasta-e-cheia1"
 received_bytes = 1024
-encrypted_message = b""
-iv1 = b""
+lock = threading.Lock()
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(("127.0.0.1", 8081))
-s.listen(2)
 
-while True:
-    (connection, address) = s.accept()
-    print("Connected address:", address)
-
+# thread function
+def client(connection):
     while True:
         data = connection.recv(received_bytes)
         if not data:
             break
         print("Received: ", data)
+
         iv_len = data[-2:].decode("UTF-8")
         print(iv_len)
         iv = data[-int(iv_len) - 2:-2]
@@ -41,14 +38,65 @@ while True:
         print(f"Sid:{transaction_id}, Sid_sign: {transaction_id_signature}")
         print("Sid len: ", len(transaction_id))
 
-        transaction_start, transaction_iv = generator.encrypt_message(str(transaction_id_signature).encode("UTF-8") + transaction_id \
-                                    + str(len(transaction_id)).encode("UTF-8"), client_key)
+        transaction_start, transaction_iv = generator.encrypt_message(
+            str(transaction_id_signature).encode("UTF-8") + transaction_id \
+            + str(len(transaction_id)).encode("UTF-8"), client_key)
         transaction_start_package = transaction_start + transaction_iv + str(len(transaction_id)).encode("UTF-8")
         connection.send(transaction_start_package)
         time.sleep(1)
 
         if b"exit" in data:
             break
+            
+    connection.close()
 
-# connection.close()
-# print("Server closed")
+
+def payment_gateway(connection):
+    while True:
+        data = connection.recv(received_bytes)
+        if not data:
+            break
+        print("Received: ", data)
+
+
+def Main():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("127.0.0.1", 8081))
+    s.listen(2)
+
+    connections = list()
+    for i in range(0, 2):
+        connections.append(s.accept())
+
+    t = threading.Thread(target=client, args=(connections[0][0],))
+    t.start()
+    t.join()
+
+    t = threading.Thread(target=payment_gateway, args=(connections[1][0],))
+    t.start()
+    t.join()
+
+    # while True:
+    #     (connection, address) = s.accept()
+    #     print("Connected address:", address)
+    #
+    #     # lock acquired by client
+    #     lock.acquire()
+    #
+    #     # Start a new thread and return its identifier
+    #     t = threading.Thread(target=client, args=(connection,))
+    #     t.start()
+    #     t.join()
+    #     # start_new_thread(client, (connection,))
+    #     # start_new_thread(payment_gateway, (connection,))
+    #
+    #     t = threading.Thread(target=payment_gateway, args=(connection,))
+    #     t.start()
+    #     t.join()
+
+    # connection.close()
+    # print("Server closed")
+
+
+if __name__ == '__main__':
+    Main()
