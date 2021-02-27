@@ -5,6 +5,10 @@ from Cryptodome.Util.Padding import pad, unpad
 from hashlib import sha512, sha256
 
 
+def generate_nonce():
+    return get_random_bytes(3)
+
+
 def generate_secret_key():
     return get_random_bytes(16)
 
