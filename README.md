@@ -1,1 +1,1 @@
-# Proiecte SCA
+# Smart Card-uri si Aplicatii - Proiecte
