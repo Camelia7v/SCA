@@ -23,7 +23,7 @@ if __name__ == '__main__':
     message_from_merchant = pickle.loads(
         generator.decrypt_message(encrypted_message_from_merchant[0], payment_gateway_merchant_key,
                                   encrypted_message_from_merchant[1]))
-    print("Message Decrypted:      ", message_from_merchant)
+    print("Decrypted Message:      ", message_from_merchant)
     _, exchange_signature = message_from_merchant
     decrypted_PM = generator.decrypt_message(message_from_merchant[0][0], payment_gateway_client_key,
                                              message_from_merchant[0][1])

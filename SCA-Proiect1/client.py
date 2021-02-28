@@ -10,11 +10,11 @@ if __name__ == '__main__':
     payment_gateway_client_key = b"payment_gateway1"
     merchant_public_key = b"aceasta-e-cheia1"
     client_public_key = generator.generate_secret_key()
-    print("Cheia client (simetrica):          ", client_public_key)
+    print("Symmetric client key:           ", client_public_key)
     encrypted_client_key, init_vector_merchant = generator.encrypt_message(client_public_key, merchant_public_key)
-    print("Cheia client (simetrica) criptata: ", encrypted_client_key)
+    print("Encrypted symmetric client key: ", encrypted_client_key)
     setup_package = encrypted_client_key + init_vector_merchant + str(len(init_vector_merchant)).encode("UTF-8")
-    print("Init vector client:                ", init_vector_merchant)
+    print("IV from encrypted client key:   ", init_vector_merchant)
 
     client_socket.send(setup_package)
     time.sleep(1)
@@ -28,19 +28,19 @@ if __name__ == '__main__':
     setup_package = client_socket.recv(1024)
 
     init_vector_merchant_length = setup_package[-2:].decode("UTF-8")
-    print("Init vector from merchant size:    ", init_vector_merchant_length)
+    print("IV from merchant size:          ", init_vector_merchant_length)
     init_vector_client = setup_package[-int(init_vector_merchant_length) - 2:-2]
-    print("Init Vector from merchant:         ", init_vector_client)
+    print("IV from merchant:               ", init_vector_client)
     encrypted_transaction_id = setup_package[0:-int(init_vector_merchant_length) - 2]
     transaction_package = generator.decrypt_message(encrypted_transaction_id, client_public_key, init_vector_client)
-    print("Transaction Package:               ", transaction_package)
+    print("Transaction Package:            ", transaction_package)
 
     transaction_id_len = transaction_package[-2:].decode("UTF-8")
-    print("...transaction id len:             ", transaction_id_len)
+    print("Transaction ID length:          ", transaction_id_len)
     transaction_id = transaction_package[-int(transaction_id_len) - 2:-2]
-    print("...transaction id:                 ", transaction_id)
+    print("Transaction ID:                 ", transaction_id)
     signature = int(transaction_package[0:-int(transaction_id_len) - 2].decode("UTF-8"))
-    print("...signature:                      ", signature)
+    print("Signature:                      ", signature)
 
     print(f"Is signature correct? {generator.check_signature(transaction_id, signature, keyPair)}")
 
@@ -84,20 +84,29 @@ if __name__ == '__main__':
         client_socket.send(pickle.dumps(full_msg))
         time.sleep(1)
 
+        start_time = time.time()
         response_from_gateway = client_socket.recv(2048)
-        print("Response from Payment gateway: ", response_from_gateway)
-        response_from_gateway = pickle.loads(response_from_gateway)
-        decrypted_response_from_gateway = generator.decrypt_message(response_from_gateway[0], client_public_key,
-                                                                    response_from_gateway[1])
-        print("Decrypted response:   ", decrypted_response_from_gateway)
-        response, transaction_id_checker, signature_resp_sid_amount_nc = pickle.loads(decrypted_response_from_gateway)
-        print("Response:             ", response)
-        print("Transaction ID:       ", transaction_id_checker)
-        print("Signature:            ", signature_resp_sid_amount_nc)
-        if transaction_id == transaction_id_checker \
-                and generator.check_signature(pickle.dumps([response, transaction_id, amount, nonce]),
-                                              signature_resp_sid_amount_nc, keyPair):
-            print("Client has received the response and it is CORRECT!")
+        timer = time.time() - start_time
+        print("Nr. de sec. in care clientul primeste raspuns de la Payment gateway: ", timer)
+        # daca in 10 secunde nu primeste raspuns, isi inchide conexiunea
+        if timer > 10:
+            print("Time exceeded !!!")
             client_socket.send(b"exit")
+            client_socket.close()
+        else:
+            print("Response from Payment gateway: ", response_from_gateway)
+            response_from_gateway = pickle.loads(response_from_gateway)
+            decrypted_response_from_gateway = generator.decrypt_message(response_from_gateway[0], client_public_key,
+                                                                        response_from_gateway[1])
+            print("Decrypted response:            ", decrypted_response_from_gateway)
+            response, transaction_id_checker, signature_resp_sid_amount_nc = pickle.loads(decrypted_response_from_gateway)
+            print("Response from PG:              ", response)
+            print("Transaction ID:                ", transaction_id_checker)
+            print("Signature:                     ", signature_resp_sid_amount_nc)
+            if transaction_id == transaction_id_checker \
+                    and generator.check_signature(pickle.dumps([response, transaction_id, amount, nonce]),
+                                                  signature_resp_sid_amount_nc, keyPair):
+                print("Client has received the response and it is CORRECT!")
+                client_socket.send(b"exit")
     else:
         client_socket.send(b"exit")

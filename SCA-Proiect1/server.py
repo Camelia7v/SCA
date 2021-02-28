@@ -17,17 +17,17 @@ def client(connection, pg_connection):
         client_data = connection.recv(received_bytes)
         if not client_data:
             break
-        print("Data received from client: ", client_data)
+        print("Data received from client:  ", client_data)
         if b"exit" in client_data:
             break
 
         init_vector_client_length = client_data[-2:].decode("UTF-8")
-        print("...iv length from client: ", init_vector_client_length)
+        print("IV length from client:      ", init_vector_client_length)
         init_vector_client = client_data[-int(init_vector_client_length) - 2:-2]
-        print("...iv from client:        ", init_vector_client)
+        print("IV from client:             ", init_vector_client)
         encrypted_client_key = client_data[0:-int(init_vector_client_length) - 2]
         client_key = generator.decrypt_message(encrypted_client_key, merchant_public_key, init_vector_client)
-        print("...Client Key:           ", client_key)
+        print("Client Key:                 ", client_key)
 
         # e   d   n
         keyPair = (65537,
@@ -38,7 +38,7 @@ def client(connection, pg_connection):
         transaction_id = generator.generate_secret_key()
         transaction_id_signature = generator.sign_message(transaction_id, keyPair)
         print(f"Sid:{transaction_id}, Sid_signed: {transaction_id_signature}")
-        print("Sid len: ", len(transaction_id))
+        print("Sid length: ", len(transaction_id))
 
         transaction_start, transaction_iv = generator.encrypt_message(
             str(transaction_id_signature).encode("UTF-8") + transaction_id
@@ -50,7 +50,7 @@ def client(connection, pg_connection):
         # Exchange Sub-protocol
 
         encrypted_placement_message = connection.recv(received_bytes)
-        print("Encrypted(PM,PO):            ", encrypted_placement_message)
+        print("Encrypted(PM,PO):           ", encrypted_placement_message)
         full_msg = pickle.loads(encrypted_placement_message)
         encrypted_placement_message, init_vector_merchant = full_msg
         pickled_placement_message = generator.decrypt_message(encrypted_placement_message, merchant_public_key,
@@ -70,7 +70,7 @@ def client(connection, pg_connection):
                                                                          payment_gateway_merchant_key)
             pg_connection.send(pickle.dumps(encrypted_pickled_merchant_to_pg))
             time.sleep(1)
-            print("Encrypted Pickled Merchant To PG:", pickle.dumps(encrypted_pickled_merchant_to_pg))
+            print("Encrypted Pickled Merchant To PG: ", pickle.dumps(encrypted_pickled_merchant_to_pg))
 
             # response from Payment gateway
             encrypted_pickled_pg_response = pickle.loads(pg_connection.recv(2048))
@@ -78,12 +78,12 @@ def client(connection, pg_connection):
                                                                          merchant_public_key,
                                                                          encrypted_pickled_pg_response[1])
             payment_gateway_response = pickle.loads(pickled_payment_gateway_response)
-            print("Payment GateWay Response:", payment_gateway_response)
+            print("Payment GateWay Response:         ", payment_gateway_response)
             response, transaction_id_check, signature_resp_sid_amount_nc = payment_gateway_response
             if transaction_id == transaction_id_check \
                     and generator.check_signature(pickle.dumps([response, transaction_id, amount, nonce]),
                                                   signature_resp_sid_amount_nc, keyPair):
-                print("Correct! Transaction Id and Signature are OK!")
+                print("Correct! Transaction ID and Signature are OK!")
                 send_to_client = [response, transaction_id, signature_resp_sid_amount_nc]
                 pickled_send_to_client = pickle.dumps(send_to_client)
                 encrypted_pickled_send_to_client = pickle.dumps(
