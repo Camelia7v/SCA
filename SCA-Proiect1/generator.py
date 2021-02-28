@@ -2,7 +2,7 @@ from Cryptodome.Cipher import AES
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Random import get_random_bytes
 from Cryptodome.Util.Padding import pad, unpad
-from hashlib import sha512, sha256
+from hashlib import sha256
 
 
 def generate_nonce():
@@ -35,7 +35,4 @@ def sign_message(message, key_pair):
 def check_signature(message, signed_message, key_pair):
     hashh = int.from_bytes(sha256(message).digest(), byteorder='big')
     hashFromSignature = pow(signed_message, key_pair[0], key_pair[2])
-    print("hashh ", hashh)
-    print("hashFromS ", hashFromSignature)
-    print("Signature valid:", hashh == hashFromSignature)
     return hashh == hashFromSignature

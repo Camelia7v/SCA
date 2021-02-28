@@ -14,17 +14,19 @@ payment_gateway_client_key = b"payment_gateway1"
 socket_to_merchant = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket_to_merchant.connect(("127.0.0.1", 8081))
 msg_size = 2048
-# nu uita padarea pana la 16 octeti
 payment_gateway_public_key = b"aceasta-e-cheia2"
 
 if __name__ == '__main__':
     encrypted_message_from_merchant = socket_to_merchant.recv(msg_size)
     print("Encrypted Message:      ", encrypted_message_from_merchant)
     encrypted_message_from_merchant = pickle.loads(encrypted_message_from_merchant)
-    message_from_merchant = pickle.loads(generator.decrypt_message(encrypted_message_from_merchant[0], payment_gateway_merchant_key, encrypted_message_from_merchant[1]))
+    message_from_merchant = pickle.loads(
+        generator.decrypt_message(encrypted_message_from_merchant[0], payment_gateway_merchant_key,
+                                  encrypted_message_from_merchant[1]))
     print("Message Decrypted:      ", message_from_merchant)
     _, exchange_signature = message_from_merchant
-    decrypted_PM = generator.decrypt_message(message_from_merchant[0][0], payment_gateway_client_key, message_from_merchant[0][1])
+    decrypted_PM = generator.decrypt_message(message_from_merchant[0][0], payment_gateway_client_key,
+                                             message_from_merchant[0][1])
     print("PM:                     ", decrypted_PM)
     print("Exchange Signature:     ", exchange_signature)
     unpacked_PM = pickle.loads(decrypted_PM)
@@ -33,23 +35,24 @@ if __name__ == '__main__':
     print("Unpacked PI:            ", unpacked_PI)
     if generator.check_signature(unpacked_PM[0], unpacked_PM[1], keyPair):
         print("UnPacked Placement Info:", pickle.loads(unpacked_PM[0]))
-        print("Signature of PI is corect!")
-        card_number, card_exp, ccode, transaction_id, amount, public_client_key, nonce, merchant_id = pickle.loads(unpacked_PM[0])
+        print("Signature of PI is correct!")
+        card_number, card_exp, ccode, transaction_id, amount, public_client_key, nonce, merchant_id = pickle.loads(
+            unpacked_PM[0])
+        print("PI: ")
         for i in pickle.loads(unpacked_PM[0]):
             print(i)
-        #     aici se testeaza ce era in PM la 4. +
-        if generator.check_signature(pickle.dumps([transaction_id, public_client_key, amount]), message_from_merchant[1], keyPair):
+        # aici se testeaza ce era in PM la 4. +
+        if generator.check_signature(pickle.dumps([transaction_id, public_client_key, amount]),
+                                     message_from_merchant[1], keyPair):
             print("Signature of message from merchant is complete!")
             response = "transaction_is_ok_bro_or_sis"
-            payment_gateway_response = [response, transaction_id, generator.sign_message(pickle.dumps([response, transaction_id, amount, nonce]), keyPair)]
+            payment_gateway_response = [response, transaction_id, generator.sign_message(pickle.dumps([response,
+                                                                                                       transaction_id,
+                                                                                                       amount, nonce]),
+                                                                                         keyPair)]
             pickled_payment_gateway_response = pickle.dumps(payment_gateway_response)
-            encrypted_pickled_pg_response = generator.encrypt_message(pickled_payment_gateway_response, merchant_public_key)
+            encrypted_pickled_pg_response = generator.encrypt_message(pickled_payment_gateway_response,
+                                                                      merchant_public_key)
             encrypted_pickled_pg_response = pickle.dumps(encrypted_pickled_pg_response)
             socket_to_merchant.send(encrypted_pickled_pg_response)
-
-        # else:
-        #     print(pickle.dumps([transaction_id, public_client_key, amount]))
-        #     print(pickle.dumps(unpacked_PM[1]))
-
-
-
+            time.sleep(1)
