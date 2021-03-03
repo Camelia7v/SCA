@@ -2,6 +2,8 @@ import socket
 import time
 import generator
 import pickle
+import re
+
 
 if __name__ == '__main__':
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -47,24 +49,34 @@ if __name__ == '__main__':
     # Exchange Sub-protocol
 
     if generator.check_signature(transaction_id, signature, keyPair):
-        card_number = input("Card Number:       ").encode("UTF-8")
-        card_expire_date = input("Card Expire Date:  ").encode("UTF-8")
-        amount = input("Amount:            ").encode("UTF-8")
-        challenge_code = "test_ccode".encode("UTF-8")
+        card_number = input("Card Number:       ")
+        while not re.match(r"\d{16}", card_number):
+            card_number = input("Incorrect! Try again:       ")
+        card_expire_date = input("Card Expire Date:  ")
+        while not re.match(r"\d{2}/\d{2}", card_expire_date):
+            card_expire_date = input("Incorrect! Try again:       ")
+        amount = input("Amount:            ")
+        while not re.match(r"\d+", amount):
+            amount = input("Incorrect! Try again:       ")
+        challenge_code = input("Challenge code:            ")
+        while not re.match(r"\d{3}", challenge_code):
+            challenge_code = input("Incorrect! Try again:       ")
         # publicKC e client public key
         nonce = generator.generate_nonce()
         merchant = "merchant_id".encode("UTF-8")
 
-        PI = [card_number,
-              card_expire_date,
-              challenge_code,
+        PI = [card_number.encode("UTF-8"),
+              card_expire_date.encode("UTF-8"),
+              challenge_code.encode("UTF-8"),
               transaction_id,
-              amount,
+              amount.encode("UTF-8"),
               client_public_key,
               nonce,
               merchant
               ]
-        order_description = input("Order Description: ").encode("UTF-8")
+        order_description = input("Order Description: ")
+        while not re.match(r"[A-Z]*[a-z]+ \d (RON | \$) x\d ", order_description):
+            order_description = input("Incorrect! Try again:       ")
         PO = [order_description,
               transaction_id,
               amount,
