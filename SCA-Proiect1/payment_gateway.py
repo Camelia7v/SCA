@@ -71,13 +71,13 @@ if __name__ == '__main__':
         # aici se testeaza ce era in PM la 4.
         print(f"INFO: {transaction_id},\n {public_client_key}, \n {amount} ")
         if generator.check_signature(pickle.dumps([transaction_id, public_client_key, amount]),
-                                     exchange_signature, keyPair_client):
+                                     exchange_signature, keyPair_merchant):
             print("Signature of message from merchant is complete!")
             response = "transaction_is_ok_bro_or_sis"
             payment_gateway_response = [response, transaction_id, generator.sign_message(pickle.dumps([response,
                                                                                                        transaction_id,
                                                                                                        amount, nonce]),
-                                                                                         keyPair_client)]
+                                                                                         keyPair_payment_gateway)]
             pickled_payment_gateway_response = pickle.dumps(payment_gateway_response)
             encrypted_pickled_pg_response = generator.encrypt_message(pickled_payment_gateway_response,
                                                                       merchant_public_key)
@@ -86,4 +86,4 @@ if __name__ == '__main__':
             socket_to_merchant.send(encrypted_pickled_pg_response)
             time.sleep(1)
         else:
-            print("Signature Imcomplete")
+            print("Signature Incomplete")

@@ -52,11 +52,11 @@ if __name__ == '__main__':
     signature = int(transaction_package[0:-int(transaction_id_len) - 2].decode("UTF-8"))
     print("Signature:                      ", signature)
 
-    print(f"Is signature correct? {generator.check_signature(transaction_id, signature, keyPair_client)}")
+    print(f"Is signature correct? {generator.check_signature(transaction_id, signature, keyPair_merchant)}")
 
     # Exchange Sub-protocol
 
-    if generator.check_signature(transaction_id, signature, keyPair_client):
+    if generator.check_signature(transaction_id, signature, keyPair_merchant):
         card_number = input("Card Number:       ")
         while not re.match(r"\d{16}", card_number):
             card_number = input("Incorrect! Try again:       ")
@@ -125,7 +125,7 @@ if __name__ == '__main__':
             print("Signature:                     ", signature_resp_sid_amount_nc)
             if transaction_id == transaction_id_checker \
                     and generator.check_signature(pickle.dumps([response, transaction_id, amount, nonce]),
-                                                  signature_resp_sid_amount_nc, keyPair_client):
+                                                  signature_resp_sid_amount_nc, keyPair_payment_gateway):
                 print("Client has received the response and it is CORRECT!")
                 client_socket.send(b"exit")
     else:

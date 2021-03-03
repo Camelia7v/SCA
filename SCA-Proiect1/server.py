@@ -43,9 +43,8 @@ def client(connection, pg_connection):
                                    107478355742181977250254299675494782542974973450439372462373043773145039788702066567734228940397007916047338719601402551236832349105468915727752891641558109869246740387884437096064926809940546667891969475429661322144419914362418875001266049551282603570322322401772315373342866042474278545583413923948461145569
                                    )
 
-
         transaction_id = generator.generate_secret_key()
-        transaction_id_signature = generator.sign_message(transaction_id, keyPair_client)
+        transaction_id_signature = generator.sign_message(transaction_id, keyPair_merchant)
         print(f"Sid: {transaction_id}, Sid_signed: {transaction_id_signature}")
         print("Sid length: ", len(transaction_id))
 
@@ -74,7 +73,7 @@ def client(connection, pg_connection):
             _, transaction_id, amount, nonce = pickle.loads(pickled_PO)
             print(f"INFO: {transaction_id},\n {client_key}, \n {amount} ")
             merchant_to_pg = \
-                [Encrypted_PM, generator.sign_message(pickle.dumps([transaction_id, client_key, amount]), keyPair_client)]
+                [Encrypted_PM, generator.sign_message(pickle.dumps([transaction_id, client_key, amount]), keyPair_merchant)]
             pickled_merchant_to_pg = pickle.dumps(merchant_to_pg)
             encrypted_pickled_merchant_to_pg = generator.encrypt_message(pickled_merchant_to_pg,
                                                                          payment_gateway_merchant_key)
@@ -92,7 +91,7 @@ def client(connection, pg_connection):
             response, transaction_id_check, signature_resp_sid_amount_nc = payment_gateway_response
             if transaction_id == transaction_id_check \
                     and generator.check_signature(pickle.dumps([response, transaction_id, amount, nonce]),
-                                                  signature_resp_sid_amount_nc, keyPair_client):
+                                                  signature_resp_sid_amount_nc, keyPair_payment_gateway):
                 print("Correct! Transaction ID and Signature are OK!")
                 send_to_client = [response, transaction_id, signature_resp_sid_amount_nc]
                 pickled_send_to_client = pickle.dumps(send_to_client)
