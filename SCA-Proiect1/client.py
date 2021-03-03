@@ -58,24 +58,24 @@ if __name__ == '__main__':
         amount = input("Amount:            ")
         while not re.match(r"\d+", amount):
             amount = input("Incorrect! Try again:       ")
-        challenge_code = input("Challenge code:            ")
+        challenge_code = input("Challenge code:    ")
         while not re.match(r"\d{3}", challenge_code):
             challenge_code = input("Incorrect! Try again:       ")
         # publicKC e client public key
         nonce = generator.generate_nonce()
         merchant = "merchant_id".encode("UTF-8")
 
-        PI = [card_number.encode("UTF-8"),
-              card_expire_date.encode("UTF-8"),
-              challenge_code.encode("UTF-8"),
+        PI = [card_number,
+              card_expire_date,
+              challenge_code,
               transaction_id,
-              amount.encode("UTF-8"),
+              amount,
               client_public_key,
               nonce,
               merchant
               ]
         order_description = input("Order Description: ")
-        while not re.match(r"[A-Z]*[a-z]+ \d (RON | \$) x\d ", order_description):
+        while not re.match(r"[A-Z]*[a-z]+ \d+RON x\d+", order_description):
             order_description = input("Incorrect! Try again:       ")
         PO = [order_description,
               transaction_id,
@@ -111,7 +111,8 @@ if __name__ == '__main__':
             decrypted_response_from_gateway = generator.decrypt_message(response_from_gateway[0], client_public_key,
                                                                         response_from_gateway[1])
             print("Decrypted response:            ", decrypted_response_from_gateway)
-            response, transaction_id_checker, signature_resp_sid_amount_nc = pickle.loads(decrypted_response_from_gateway)
+            response, transaction_id_checker, signature_resp_sid_amount_nc = \
+                pickle.loads(decrypted_response_from_gateway)
             print("Response from PG:              ", response)
             print("Transaction ID:                ", transaction_id_checker)
             print("Signature:                     ", signature_resp_sid_amount_nc)
