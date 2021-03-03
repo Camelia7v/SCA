@@ -41,7 +41,7 @@ if __name__ == '__main__':
         print("PI: ")
         for i in pickle.loads(unpacked_PM[0]):
             print(i)
-        # aici se testeaza ce era in PM la 4. +
+        # aici se testeaza ce era in PM la 4.
         if generator.check_signature(pickle.dumps([transaction_id, public_client_key, amount]),
                                      message_from_merchant[1], keyPair):
             print("Signature of message from merchant is complete!")

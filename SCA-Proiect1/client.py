@@ -28,7 +28,7 @@ if __name__ == '__main__':
     setup_package = client_socket.recv(1024)
 
     init_vector_merchant_length = setup_package[-2:].decode("UTF-8")
-    print("IV from merchant size:          ", init_vector_merchant_length)
+    print("IV size from merchant:          ", init_vector_merchant_length)
     init_vector_client = setup_package[-int(init_vector_merchant_length) - 2:-2]
     print("IV from merchant:               ", init_vector_client)
     encrypted_transaction_id = setup_package[0:-int(init_vector_merchant_length) - 2]
@@ -51,7 +51,7 @@ if __name__ == '__main__':
         card_expire_date = input("Card Expire Date:  ").encode("UTF-8")
         amount = input("Amount:            ").encode("UTF-8")
         challenge_code = "test_ccode".encode("UTF-8")
-        # publicKC e public key client
+        # publicKC e client public key
         nonce = generator.generate_nonce()
         merchant = "merchant_id".encode("UTF-8")
 

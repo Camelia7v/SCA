@@ -37,7 +37,7 @@ def client(connection, pg_connection):
 
         transaction_id = generator.generate_secret_key()
         transaction_id_signature = generator.sign_message(transaction_id, keyPair)
-        print(f"Sid:{transaction_id}, Sid_signed: {transaction_id_signature}")
+        print(f"Sid: {transaction_id}, Sid_signed: {transaction_id_signature}")
         print("Sid length: ", len(transaction_id))
 
         transaction_start, transaction_iv = generator.encrypt_message(
