@@ -71,9 +71,10 @@ def client(connection, pg_connection):
         if generator.check_signature(pickled_PO, sign_pickled_PO, keyPair_client):
             print("Signature of PO is correct!")
             _, transaction_id, amount, nonce = pickle.loads(pickled_PO)
-            print(f"INFO: {transaction_id},\n {client_key}, \n {amount} ")
+            # print(f"INFO: {transaction_id},\n {client_key}, \n {amount} ")
             merchant_to_pg = \
-                [Encrypted_PM, generator.sign_message(pickle.dumps([transaction_id, client_key, amount]), keyPair_merchant)]
+                [Encrypted_PM, generator.sign_message(pickle.dumps([transaction_id, client_key, amount]),
+                                                      keyPair_merchant)]
             pickled_merchant_to_pg = pickle.dumps(merchant_to_pg)
             encrypted_pickled_merchant_to_pg = generator.encrypt_message(pickled_merchant_to_pg,
                                                                          payment_gateway_merchant_key)
